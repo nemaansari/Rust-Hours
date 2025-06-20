@@ -37,7 +37,16 @@ async function getPlayerHours(playerId) {
     );
 
     let totalMinutes = 0;
+    const serverHours = {};
     const sessions = sessionsResponse.data.data;
+    const servers = sessionsResponse.data.included || [];
+
+    const serverMap = {};
+    servers.forEach((server) => {
+      if (server.type === `server`) {
+        serverMap[server.id] = server.attributes.name;
+      }
+    });
 
     sessions.forEach((session) => {
       if (session.attributes.start && session.attributes.stop) {
@@ -45,8 +54,25 @@ async function getPlayerHours(playerId) {
         const stop = new Date(session.attributes.stop);
         const duration = (stop - start) / (1000 * 60);
         totalMinutes += duration;
+
+        const serverId = session.relationships?.server?.data?.id;
+        if (serverId) {
+          if (!serverHours[serverId]) {
+            serverHours[serverId] = 0;
+          }
+          serverHours[serverId] += duration;
+        }
       }
     });
+
+    const topServers = Object.entries(serverHours)
+      .map(([serverId, minutes]) => ({
+        serverId,
+        name: serverMap[serverId] || `Server ${serverId}`,
+        hours: Math.round((minutes / 60) * 100) / 100,
+      }))
+      .sort((a, b) => b.hours - a.hours)
+      .slice(0, 5);
 
     const totalHours = Math.round((totalMinutes / 60) * 100) / 100;
 
@@ -55,6 +81,7 @@ async function getPlayerHours(playerId) {
       totalHours: totalHours,
       lastSeen: playerData.attributes.lastSeen,
       playerId: playerId,
+      topServers: topServers,
     };
   } catch (error) {
     console.error("Battlemetrics API Error:", error.message);
@@ -68,7 +95,7 @@ const commands = [
     .setDescription("Replies with Pong!"),
 
   new SlashCommandBuilder()
-    .setName("rusthours")
+    .setName("hours")
     .setDescription("Get a player's Rust hours from Battlemetrics")
     .addStringOption((option) =>
       option
@@ -112,7 +139,7 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.reply("Pong!");
   }
 
-  if (interaction.commandName === "rusthours") {
+  if (interaction.commandName === "hours") {
     await interaction.deferReply();
 
     const playerId = interaction.options.getString("playerid");
@@ -127,7 +154,7 @@ client.on("interactionCreate", async (interaction) => {
         .addFields({
           name: "Example",
           value:
-            "From URL: `https://www.battlemetrics.com/players/123456789`\nUse: `/rusthours playerid:123456789`",
+            "From URL: `https://www.battlemetrics.com/players/123456789`\nUse: `/hours playerid:123456789`",
         });
 
       return await interaction.editReply({ embeds: [errorEmbed] });
@@ -148,6 +175,18 @@ client.on("interactionCreate", async (interaction) => {
           });
 
         return await interaction.editReply({ embeds: [errorEmbed] });
+      }
+
+      let topServersText = ` `;
+      if (playerData.topServers && playerData.topServers.length > 0) {
+        topServersText = playerData.topServers
+          .map(
+            (server, index) =>
+              `${index + 1}. **${server.name}** - ${server.hours}h`,
+          )
+          .join("\n");
+      } else {
+        topServersText = "No server data available";
       }
 
       const embed = new EmbedBuilder()
@@ -173,6 +212,11 @@ client.on("interactionCreate", async (interaction) => {
             inline: true,
           },
           {
+            name: "🏆 Top 5 Servers",
+            value: topServersText,
+            inline: false,
+          },
+          {
             name: "🔗 Battlemetrics Profile",
             value: `[View Profile](https://www.battlemetrics.com/players/${playerId})`,
             inline: false,
@@ -183,7 +227,7 @@ client.on("interactionCreate", async (interaction) => {
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-      console.error("Error processing rusthours command:", error);
+      console.error("Error processing hours command:", error);
 
       const errorEmbed = new EmbedBuilder()
         .setColor("#ff0000")
