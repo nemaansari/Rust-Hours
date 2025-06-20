@@ -157,7 +157,7 @@ const {
                 "From URL: `https://www.battlemetrics.com/players/123456789`\nUse: `/hours playerid:123456789`",
             });
   
-          return await interaction.editReply({ content: null, embeds: [errorEmbed] });
+          return await interaction.editReply({ content: "", embeds: [errorEmbed] });
         }
   
         const playerData = await getPlayerHours(playerId);
@@ -173,7 +173,7 @@ const {
                 "• Make sure the player ID is correct\n• Check that the player exists on Battlemetrics\n• Try again in a few moments",
             });
   
-          return await interaction.editReply({ content: null, embeds: [errorEmbed] });
+          return await interaction.editReply({ content: "", embeds: [errorEmbed] });
         }
   
         let topServersText = "";
@@ -224,7 +224,7 @@ const {
           .setFooter({ text: "Data from Battlemetrics API" })
           .setTimestamp();
   
-        await interaction.editReply({ content: null, embeds: [embed] });
+        await interaction.editReply({ content: "", embeds: [embed] });
   
       } catch (error) {
         console.error("Error processing hours command:", error);
@@ -237,12 +237,7 @@ const {
               "Something went wrong while fetching player data. Please try again later.",
             );
   
-         
-          if (interaction.replied) {
-            await interaction.editReply({ content: null, embeds: [errorEmbed] });
-          } else {
-            await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-          }
+          await interaction.editReply({ content: "", embeds: [errorEmbed] });
         } catch (replyError) {
           console.error("Error sending error message:", replyError.message);
         }
@@ -252,7 +247,7 @@ const {
   
   client.login(process.env.DISCORD_TOKEN);
   
-  
+
   const PORT = process.env.PORT || 8080;
   const express = require("express");
   const app = express();
