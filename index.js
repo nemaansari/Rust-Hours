@@ -60,7 +60,7 @@ client.on(`interactionCreate`, async interaction => {
 
     if (interaction.commandName === `hours`) {
         const playerId = interaction.options.getString(`playerid`);
-        await interaction.reply(`Looking up hours for player ID: ${playerID}`);
+        await interaction.reply(`Looking up hours for player ID: ${playerId}`);
     }
 
 });
