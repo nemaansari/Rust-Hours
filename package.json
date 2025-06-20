@@ -4,7 +4,8 @@
   "description": "Find anyone's rust hours",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write ."
   },
   "author": "Nema",
   "license": "ISC",
