@@ -25,19 +25,22 @@ const BATTLEMETRICS_API = "https://api.battlemetrics.com";
 async function getPlayerHours(playerId) {
   try {
     console.log(`Fetching player data for ID: ${playerId}`);
-    
+
     // Fetch player data with server information included
     // This gives us both basic player info and server playtime data
-    const response = await axios.get(`${BATTLEMETRICS_API}/players/${playerId}`, {
-      params: { 'include': 'server' },
-      timeout: 10000
-    });
-    
+    const response = await axios.get(
+      `${BATTLEMETRICS_API}/players/${playerId}`,
+      {
+        params: { include: "server" },
+        timeout: 10000,
+      },
+    );
+
     const playerData = response.data.data;
     const serverData = response.data.included || [];
-    
+
     console.log(`Found ${serverData.length} servers with playtime data`);
-    
+
     // Initialize tracking variables
     let totalSeconds = 0;
     const serverHours = {};
@@ -47,33 +50,41 @@ async function getPlayerHours(playerId) {
 
     // Process each server to calculate playtime statistics
     serverData.forEach((server) => {
-      if (server.type === 'server' && server.meta && server.meta.timePlayed) {
+      if (server.type === "server" && server.meta && server.meta.timePlayed) {
         const serverName = server.attributes.name;
         const timePlayed = server.meta.timePlayed; // Time in seconds
-        
+
         console.log(`${serverName}: ${(timePlayed / 3600).toFixed(2)} hours`);
-        
+
         // Add to total playtime
         totalSeconds += timePlayed;
-        
+
         // Store individual server data
         serverHours[server.id] = {
           name: serverName,
           seconds: timePlayed,
-          hours: Math.round((timePlayed / 3600) * 100) / 100
+          hours: Math.round((timePlayed / 3600) * 100) / 100,
         };
-        
+
         // Classify servers by region (US servers)
         if (serverName.match(/\b(US|USA|America|NA|West|East|Central)\b/i)) {
           usSeconds += timePlayed;
-        } 
+        }
         // Classify servers by region (EU servers)
-        else if (serverName.match(/\b(EU|Europe|UK|Germany|France|Netherlands|London|Amsterdam)\b/i)) {
+        else if (
+          serverName.match(
+            /\b(EU|Europe|UK|Germany|France|Netherlands|London|Amsterdam)\b/i,
+          )
+        ) {
           euSeconds += timePlayed;
         }
-        
+
         // Classify aim training/practice servers
-        if (serverName.match(/\b(aim|training|train|combat|arena|dm|deathmatch|practice|warmup)\b/i)) {
+        if (
+          serverName.match(
+            /\b(aim|training|train|combat|arena|dm|deathmatch|practice|warmup)\b/i,
+          )
+        ) {
           aimTrainingSeconds += timePlayed;
         }
       }
@@ -83,14 +94,15 @@ async function getPlayerHours(playerId) {
     const totalHours = Math.round((totalSeconds / 3600) * 100) / 100;
     const usHours = Math.round((usSeconds / 3600) * 100) / 100;
     const euHours = Math.round((euSeconds / 3600) * 100) / 100;
-    const aimTrainingHours = Math.round((aimTrainingSeconds / 3600) * 100) / 100;
+    const aimTrainingHours =
+      Math.round((aimTrainingSeconds / 3600) * 100) / 100;
 
     // Create top 5 most played servers list
     const topServers = Object.entries(serverHours)
       .map(([serverId, data]) => ({
         serverId,
         name: data.name,
-        hours: data.hours
+        hours: data.hours,
       }))
       .sort((a, b) => b.hours - a.hours) // Sort by hours descending
       .slice(0, 5); // Take top 5
@@ -104,7 +116,7 @@ async function getPlayerHours(playerId) {
       topServers: topServers,
       usHours: usHours,
       euHours: euHours,
-      aimTrainingHours: aimTrainingHours
+      aimTrainingHours: aimTrainingHours,
     };
   } catch (error) {
     console.error("Battlemetrics API Error:", error.message);
@@ -124,11 +136,15 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("hours")
-    .setDescription("Get comprehensive Rust player statistics from Battlemetrics")
+    .setDescription(
+      "Get comprehensive Rust player statistics from Battlemetrics",
+    )
     .addStringOption((option) =>
       option
         .setName("playerid")
-        .setDescription("Battlemetrics player ID (found in player's Battlemetrics URL)")
+        .setDescription(
+          "Battlemetrics player ID (found in player's Battlemetrics URL)",
+        )
         .setRequired(true),
     ),
 ];
@@ -198,20 +214,23 @@ client.on("interactionCreate", async (interaction) => {
     } catch (error) {
       console.error("Error responding to ping:", error.message);
     }
-  } 
+  }
   // Handle hours command - main functionality
   else if (interaction.commandName === "hours") {
     console.log("=== HOURS COMMAND STARTED ===");
-    
+
     try {
       // Send immediate response to prevent Discord 3-second timeout
-      const initialReply = await safeInteractionReply(interaction, "🔄 Looking up player data... this may take a moment!");
-      
+      const initialReply = await safeInteractionReply(
+        interaction,
+        "🔄 Looking up player data... this may take a moment!",
+      );
+
       if (!initialReply) {
         console.log("Initial reply failed - interaction expired");
         return;
       }
-      
+
       console.log("Initial reply sent successfully");
 
       const playerId = interaction.options.getString("playerid");
@@ -223,10 +242,13 @@ client.on("interactionCreate", async (interaction) => {
         const errorEmbed = new EmbedBuilder()
           .setColor("#ff0000")
           .setTitle("❌ Invalid Player ID")
-          .setDescription("Please provide a valid numeric player ID from the Battlemetrics URL.")
+          .setDescription(
+            "Please provide a valid numeric player ID from the Battlemetrics URL.",
+          )
           .addFields({
             name: "Example",
-            value: "From URL: `https://www.battlemetrics.com/players/123456789`\nUse: `/hours playerid:123456789`",
+            value:
+              "From URL: `https://www.battlemetrics.com/players/123456789`\nUse: `/hours playerid:123456789`",
           });
 
         await safeInteractionReply(interaction, {
@@ -240,7 +262,10 @@ client.on("interactionCreate", async (interaction) => {
       // Fetch player data from Battlemetrics API
       console.log("About to call getPlayerHours...");
       const playerData = await getPlayerHours(playerId);
-      console.log("getPlayerHours completed, result:", playerData ? "success" : "null");
+      console.log(
+        "getPlayerHours completed, result:",
+        playerData ? "success" : "null",
+      );
 
       // Handle case where player is not found or API error occurred
       if (!playerData) {
@@ -250,7 +275,8 @@ client.on("interactionCreate", async (interaction) => {
           .setDescription(`Could not find player with ID: ${playerId}`)
           .addFields({
             name: "Tips",
-            value: "• Make sure the player ID is correct\n• Check that the player exists on Battlemetrics\n• Try again in a few moments",
+            value:
+              "• Make sure the player ID is correct\n• Check that the player exists on Battlemetrics\n• Try again in a few moments",
           });
 
         await safeInteractionReply(interaction, {
@@ -265,7 +291,10 @@ client.on("interactionCreate", async (interaction) => {
       let topServersText = "";
       if (playerData.topServers && playerData.topServers.length > 0) {
         topServersText = playerData.topServers
-          .map((server, index) => `${index + 1}. **${server.name}** - ${server.hours}h`)
+          .map(
+            (server, index) =>
+              `${index + 1}. **${server.name}** - ${server.hours}h`,
+          )
           .join("\n");
       } else {
         topServersText = "No server data available";
@@ -326,7 +355,6 @@ client.on("interactionCreate", async (interaction) => {
       console.log("Sending final reply...");
       await safeInteractionReply(interaction, { content: "", embeds: [embed] });
       console.log("=== HOURS COMMAND COMPLETED SUCCESSFULLY ===");
-
     } catch (error) {
       console.error("=== ERROR IN HOURS COMMAND ===");
       console.error("Error details:", error);
@@ -336,9 +364,14 @@ client.on("interactionCreate", async (interaction) => {
         const errorEmbed = new EmbedBuilder()
           .setColor("#ff0000")
           .setTitle("❌ Error")
-          .setDescription("Something went wrong while fetching player data. Please try again later.");
+          .setDescription(
+            "Something went wrong while fetching player data. Please try again later.",
+          );
 
-        await safeInteractionReply(interaction, { content: "", embeds: [errorEmbed] });
+        await safeInteractionReply(interaction, {
+          content: "",
+          embeds: [errorEmbed],
+        });
         console.log("Error message sent to user");
       } catch (replyError) {
         console.error("Failed to send error message:", replyError);
@@ -349,21 +382,21 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 // Global error handlers to prevent bot crashes
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('=== UNHANDLED PROMISE REJECTION ===');
-  console.error('Reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("=== UNHANDLED PROMISE REJECTION ===");
+  console.error("Reason:", reason);
   // Don't exit process - keep bot running
 });
 
-process.on('uncaughtException', (error) => {
-  console.error('=== UNCAUGHT EXCEPTION ===');
-  console.error('Error:', error);
+process.on("uncaughtException", (error) => {
+  console.error("=== UNCAUGHT EXCEPTION ===");
+  console.error("Error:", error);
   // Don't exit process - keep bot running
 });
 
-client.on('error', (error) => {
-  console.error('=== DISCORD CLIENT ERROR ===');
-  console.error('Error:', error);
+client.on("error", (error) => {
+  console.error("=== DISCORD CLIENT ERROR ===");
+  console.error("Error:", error);
   // Log error but don't crash
 });
 
