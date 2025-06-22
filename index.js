@@ -46,6 +46,14 @@ async function getPlayerHours(playerId) {
     const serverHours = {};
     let usSeconds = 0;
     let euSeconds = 0;
+    let asiaSeconds = 0;
+    let oceaniaSeconds = 0;
+    let saSeconds = 0;
+    let canadaSeconds = 0;
+    let mexicoSeconds = 0;
+    let russiaSeconds = 0;
+    let middleEastSeconds = 0;
+    let africaSeconds = 0;
     let aimTrainingSeconds = 0;
 
     // Process each server to calculate playtime statistics
@@ -67,16 +75,78 @@ async function getPlayerHours(playerId) {
         };
 
         // Classify servers by region (US servers)
-        if (serverName.match(/\b(US|USA|America|NA|West|East|Central)\b/i)) {
+        if (
+          serverName.match(
+            /\b(US|USA|America|NA|West|East|Central|North America)\b/i,
+          )
+        ) {
           usSeconds += timePlayed;
+        }
+        // Classify servers by region (Canada)
+        else if (
+          serverName.match(
+            /\b(Canada|CA|Canadian|Toronto|Vancouver|Montreal)\b/i,
+          )
+        ) {
+          canadaSeconds += timePlayed;
+        }
+        // Classify servers by region (Mexico)
+        else if (serverName.match(/\b(Mexico|MX|Mexican)\b/i)) {
+          mexicoSeconds += timePlayed;
         }
         // Classify servers by region (EU servers)
         else if (
           serverName.match(
-            /\b(EU|Europe|UK|Germany|France|Netherlands|London|Amsterdam)\b/i,
+            /\b(EU|Europe|UK|Germany|France|Netherlands|London|Amsterdam|Sweden|Norway|Denmark)\b/i,
           )
         ) {
           euSeconds += timePlayed;
+        }
+        // Classify servers by region (Russia/CIS)
+        else if (
+          serverName.match(
+            /\b(Russia|RU|CIS|Moscow|Russian|Belarus|Ukraine)\b/i,
+          )
+        ) {
+          russiaSeconds += timePlayed;
+        }
+        // Classify servers by region (Middle East)
+        else if (
+          serverName.match(
+            /\b(ME|Middle East|Dubai|UAE|Turkey|TR|Israel|Saudi)\b/i,
+          )
+        ) {
+          middleEastSeconds += timePlayed;
+        }
+        // Classify servers by region (Asia/APAC)
+        else if (
+          serverName.match(
+            /\b(Asia|APAC|Japan|Singapore|Korea|China|Hong Kong|SEA|Southeast Asia)\b/i,
+          )
+        ) {
+          asiaSeconds += timePlayed;
+        }
+        // Classify servers by region (Oceania)
+        else if (
+          serverName.match(
+            /\b(OCE|Oceania|Australia|Sydney|Melbourne|New Zealand|AU|NZ)\b/i,
+          )
+        ) {
+          oceaniaSeconds += timePlayed;
+        }
+        // Classify servers by region (Africa)
+        else if (
+          serverName.match(/\b(Africa|South Africa|ZA|Cape Town|African)\b/i)
+        ) {
+          africaSeconds += timePlayed;
+        }
+        // Classify servers by region (South America) - Fixed BR detection
+        else if (
+          serverName.match(
+            /\b(SA|South America|Brazil|Argentina|Chile|BR|Sao Paulo|Rustoria\.co.*BR)\b/i,
+          )
+        ) {
+          saSeconds += timePlayed;
         }
 
         // Classify aim training/practice servers
@@ -94,6 +164,15 @@ async function getPlayerHours(playerId) {
     const totalHours = Math.round((totalSeconds / 3600) * 100) / 100;
     const usHours = Math.round((usSeconds / 3600) * 100) / 100;
     const euHours = Math.round((euSeconds / 3600) * 100) / 100;
+    const asiaHours = Math.round((asiaSeconds / 3600) * 100) / 100;
+    const oceaniaHours = Math.round((oceaniaSeconds / 3600) * 100) / 100;
+    const saHours = Math.round((saSeconds / 3600) * 100) / 100;
+    const canadaHours = Math.round((canadaSeconds / 3600) * 100) / 100;
+    const mexicoHours = Math.round((mexicoSeconds / 3600) * 100) / 100;
+    const russiaHours = Math.round((russiaSeconds / 3600) * 100) / 100;
+    const middleEastHours = Math.round((middleEastSeconds / 3600) * 100) / 100;
+    const africaHours = Math.round((africaSeconds / 3600) * 100) / 100;
+
     const aimTrainingHours =
       Math.round((aimTrainingSeconds / 3600) * 100) / 100;
 
@@ -116,6 +195,14 @@ async function getPlayerHours(playerId) {
       topServers: topServers,
       usHours: usHours,
       euHours: euHours,
+      asiaHours: asiaHours,
+      oceaniaHours: oceaniaHours,
+      saHours: saHours,
+      canadaHours: canadaHours,
+      mexicoHours: mexicoHours,
+      russiaHours: russiaHours,
+      middleEastHours: middleEastHours,
+      africaHours: africaHours,
       aimTrainingHours: aimTrainingHours,
     };
   } catch (error) {
@@ -302,52 +389,128 @@ client.on("interactionCreate", async (interaction) => {
 
       // Create rich embed with all player statistics
       console.log("Building embed...");
+
+      const embedFields = [
+        {
+          name: "👤 Player Name",
+          value: playerData.name || "Unknown",
+          inline: true,
+        },
+        {
+          name: "⏰ Total Hours",
+          value: `${playerData.totalHours} hours`,
+          inline: true,
+        },
+        {
+          name: "\u200B", // Invisible character for spacing
+          value: "\u200B",
+          inline: true,
+        },
+      ];
+
+      if (playerData.usHours > 0) {
+        embedFields.push({
+          name: "🇺🇸 US Servers",
+          value: `${playerData.usHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.euHours > 0) {
+        embedFields.push({
+          name: "🇪🇺 EU Servers",
+          value: `${playerData.euHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.asiaHours > 0) {
+        embedFields.push({
+          name: "🌏 Asia/APAC",
+          value: `${playerData.asiaHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.oceaniaHours > 0) {
+        embedFields.push({
+          name: "🇦🇺 Oceania",
+          value: `${playerData.oceaniaHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.saHours > 0) {
+        embedFields.push({
+          name: "🇧🇷 South America",
+          value: `${playerData.saHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.canadaHours > 0) {
+        embedFields.push({
+          name: "🇨🇦 Canada",
+          value: `${playerData.canadaHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.mexicoHours > 0) {
+        embedFields.push({
+          name: "🇲🇽 Mexico",
+          value: `${playerData.mexicoHours || 0}h`,
+          inline: true,
+        });
+      }
+      if (playerData.russiaHours > 0) {
+        embedFields.push({
+          name: "🇷🇺 Russia/CIS",
+          value: `${playerData.russiaHours || 0}h`,
+          inline: true,
+        });
+      }
+      if (playerData.middleEastHours > 0) {
+        embedFields.push({
+          name: "🌍 Middle East",
+          value: `${playerData.middleEastHours || 0}h`,
+          inline: true,
+        });
+      }
+      if (playerData.africaHours > 0) {
+        embedFields.push({
+          name: "🌍 Africa",
+          value: `${playerData.africaHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      if (playerData.aimTrainingHours > 0) {
+        embedFields.push({
+          name: "🎯 Aim Training",
+          value: `${playerData.aimTrainingHours || 0}h`,
+          inline: true,
+        });
+      }
+
+      embedFields.push(
+        {
+          name: "🏆 Top 5 Servers",
+          value: topServersText,
+          inline: false,
+        },
+        {
+          name: "🔗 Battlemetrics Profile",
+          value: `[View Full Profile](https://www.battlemetrics.com/players/${playerId})`,
+          inline: false,
+        },
+      );
+
       const embed = new EmbedBuilder()
         .setColor("#ce422b") // Rust orange color
         .setTitle("🦀 Rust Player Statistics")
         .setThumbnail("https://cdn.battlemetrics.com/b/standardicons/rust.png")
-        .addFields(
-          {
-            name: "👤 Player Name",
-            value: playerData.name || "Unknown",
-            inline: true,
-          },
-          {
-            name: "⏰ Total Hours",
-            value: `${playerData.totalHours} hours`,
-            inline: true,
-          },
-          {
-            name: "\u200B", // Invisible character for spacing
-            value: "\u200B",
-            inline: true,
-          },
-          {
-            name: "🇺🇸 US Servers",
-            value: `${playerData.usHours || 0}h`,
-            inline: true,
-          },
-          {
-            name: "🇪🇺 EU Servers",
-            value: `${playerData.euHours || 0}h`,
-            inline: true,
-          },
-          {
-            name: "🎯 Aim Training",
-            value: `${playerData.aimTrainingHours || 0}h`,
-            inline: true,
-          },
-          {
-            name: "🏆 Top 5 Servers",
-            value: topServersText,
-            inline: false,
-          },
-          {
-            name: "🔗 Battlemetrics Profile",
-            value: `[View Full Profile](https://www.battlemetrics.com/players/${playerId})`,
-            inline: false,
-          },
-        )
+        .addFields(embedFields)
         .setFooter({ text: "Data provided by Battlemetrics API" })
         .setTimestamp();
 
