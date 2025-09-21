@@ -1,4 +1,4 @@
-# 🦀 Rust Hours Bot - Quick Add Guide
+# 🦀 Rust Hours Bot - User Guide
 
 ## Add Bot to Your Server (1-Click)
 
@@ -54,3 +54,4 @@ The bot will show:
 ---
 
 *Powered by Battlemetrics API | Not affiliated with Facepunch Studios*
+*Bot hosted and maintained by the developer*

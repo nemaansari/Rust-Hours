@@ -33,6 +33,8 @@ A Discord bot that fetches comprehensive Rust player statistics from Battlemetri
 
 ---
 
+*This bot is hosted and maintained by the developer. For support or questions, contact through GitHub.*
+
 ## For Developers
 
 ### Local Development Setup
