@@ -39,8 +39,6 @@ A Discord bot that fetches comprehensive Rust player statistics from Battlemetri
 
 ### Local Development Setup
 
-### Local Development Setup
-
 ### 1. Create Discord Application
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Click "New Application" and name your bot
