@@ -234,6 +234,10 @@ const commands = [
         )
         .setRequired(true),
     ),
+
+  new SlashCommandBuilder()
+    .setName("help")
+    .setDescription("Show how to use the Rust Hours bot"),
 ];
 
 /**
@@ -299,6 +303,41 @@ client.on("interactionCreate", async (interaction) => {
       await safeInteractionReply(interaction, "Pong! 🏓");
     } catch (error) {
       console.error("Error responding to ping:", error.message);
+    }
+  }
+  // Handle help command - usage guide
+  else if (interaction.commandName === "help") {
+    const helpEmbed = new EmbedBuilder()
+      .setColor("#ce422b")
+      .setTitle("🦀 Rust Hours Bot Guide")
+      .setDescription("Follow these quick steps to check any player's hours.")
+      .addFields(
+        {
+          name: "Step 1: Copy the player ID",
+          value:
+            "Open their Battlemetrics profile and copy the numbers from the URL (e.g. `https://www.battlemetrics.com/players/123456789` → `123456789`).",
+          inline: false,
+        },
+        {
+          name: "Step 2: Run the command",
+          value: "`/hours playerid:123456789`",
+          inline: false,
+        },
+        {
+          name: "What you get",
+          value:
+            "• Total hours played\n• Top 5 most-played servers\n• Region breakdown\n• Direct link to their Battlemetrics profile",
+          inline: false,
+        },
+      )
+      .setThumbnail("https://cdn.battlemetrics.com/b/standardicons/rust.png")
+      .setFooter({ text: "Need more help? Ask in your server's help channel." })
+      .setTimestamp();
+
+    try {
+      await safeInteractionReply(interaction, { embeds: [helpEmbed] });
+    } catch (error) {
+      console.error("Error responding to help command:", error.message);
     }
   }
   // Handle hours command - main functionality
