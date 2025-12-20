@@ -1,9 +1,9 @@
 node_modules
+npm-debug.log
+yarn-error.log
 .git
 .gitignore
-README.md
 .env
-.dockerignore
-Dockerfile
-*.log
+.env.local
 .DS_Store
+*.log
